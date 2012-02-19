@@ -1,0 +1,59 @@
+#!/usr/bin/env perl
+use Mojo::Base -strict;
+
+use File::Basename 'dirname';
+use File::Spec::Functions 'splitdir';
+
+use lib '../lib', 'lib';
+
+use PerlPeer;
+
+use Mojo::Server::Daemon;
+use AnyEvent;
+use EV;
+
+use PerlPeer::Files;
+use PerlPeer::Nodes;
+
+push @INC, join('/', splitdir(dirname(__FILE__)), '..', 'lib');
+
+# Check if Mojolicious is installed;
+die <<EOF unless eval 'use Mojolicious::Commands; 1';
+It looks like you don't have the Mojolicious framework installed.
+Please visit http://mojolicio.us for detailed installation instructions.
+
+EOF
+
+# Application
+$ENV{MOJO_APP} ||= 'PerlPeer';
+
+# Port?
+my $port = shift || 8080;
+
+# Create the Files and Nodes handlers
+my $nodes = PerlPeer::Nodes->new($port);
+my $files = PerlPeer::Files->new();
+
+# Remind us who we are
+say "We are " . $nodes->self();
+
+# Add any more nodes
+while (my $arg = shift) {
+  my ($ip, $port) = split /:/, $arg;
+  $nodes->add_if_necessary( { ip => $ip, port => $port } );
+}
+
+# Initialise the app and daemon.
+my $app = PerlPeer->new();
+
+$app->config->{ files } = $files;
+$app->config->{ nodes } = $nodes;
+
+my $daemon = Mojo::Server::Daemon->new(app => $app, listen => ['http://*:'.$port]);
+$daemon->start;
+
+# Start EV stuff
+my $nodes_timer = AE::timer 1, 5, sub { $nodes->update() };
+
+my $cv = AE::cv;
+$cv->recv;
