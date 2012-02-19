@@ -106,7 +106,7 @@ sub ping_received {
   my $tx   = shift;
 
   # XX check if it's good
-  if ($tx && $tx->res && $tx->res->code == 200) {
+  if ($tx && $tx->res && $tx->res->code && $tx->res->code == 200) {
     my $response;
     eval { $response = $tx->res->json; };
     if (!$@ && $response->{result} eq 'ok') {
@@ -115,21 +115,6 @@ sub ping_received {
 	# reset the timer and set the uuid
 	$self->{timeout} = time() + $timeout;
 	$self->{uuid}    = $response->{uuid};
-	# deal with the other nodes
-
-	# parse all the other node information
-	my $other_nodes = $json->decode($response->{nodes});
-
-	foreach (@$other_nodes) {
-	  # only interested in those that have a UUID
-	  warn "WOO";
-	  if ($_->{uuid}) {
-	    warn "addig $_";
-	    $self->parent->add_if_necessary( { uuid => $_->{uuid},
-					       ip   => $_->{ip},
-					       port => $_->{port} } );
-	  }
-	}
       }
 
       else {
@@ -143,8 +128,10 @@ sub ping_received {
     }
   }
   else {
-    warn "bad response from ping\n";
+    say " * $self - bad ping response";
+    say "   body . " . $tx->res->body;
   }
+
   # whatever happened, we are done with the request, so kill
   # the event and ua.
   undef $self->{ping_cv};

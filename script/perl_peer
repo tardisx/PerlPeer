@@ -28,10 +28,13 @@ EOF
 $ENV{MOJO_APP} ||= 'PerlPeer';
 
 # Port?
-my $port = shift || 8080;
+my $ip   = shift;
+my $port = shift;
+
+die "pass an ip and a port" unless ($ip && $port);
 
 # Create the Files and Nodes handlers
-my $nodes = PerlPeer::Nodes->new($port);
+my $nodes = PerlPeer::Nodes->new($ip, $port);
 my $files = PerlPeer::Files->new();
 
 # Remind us who we are

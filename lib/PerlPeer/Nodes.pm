@@ -17,6 +17,7 @@ my $our_uuid = Data::UUID->new->create_str;
 sub new {
 
   my $class = shift;
+  my $self_ip   = shift;
   my $self_port = shift;
 
   confess "called as object method" if ref $class;
@@ -25,7 +26,11 @@ sub new {
   bless $self, __PACKAGE__;
 
   # in the beginning we know only about ourself
-  my $us = PerlPeer::Node->new( { ip => '127.0.0.1', uuid => $our_uuid, port => $self_port, parent => $self } );
+  say "Creating a new set of nodes with first node ip: $self_ip, port $self_port";
+  my $us = PerlPeer::Node->new( { ip     => $self_ip,
+				  uuid   => $our_uuid,
+				  port   => $self_port,
+				  parent => $self } );
   $self->{nodes} = [ $us ];
 
   return $self;
