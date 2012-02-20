@@ -28,6 +28,7 @@ print $fh "x" x 4096;
 close $fh;
 
 my $file_local = PerlPeer::File->new_from_local_file({filename => $filename,
+						      path => './',
 						      parent => {}});
 ok ($file_local, 'exists');
 ok ($file_local->size == 4096, 'right size');

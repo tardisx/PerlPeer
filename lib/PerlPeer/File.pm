@@ -28,6 +28,7 @@ sub new {
 	       filename => $args->{filename},
 	       parent   => $args->{parent},
 	       size     => $args->{size},
+	       path     => $args->{path},
 	     };
 
   bless $self, __PACKAGE__;
@@ -42,8 +43,10 @@ sub new_from_local_file {
   confess "no filename" unless $args->{filename};
   confess "'$args->{filename}' does not exist" unless -f $args->{filename};
   confess "no parent" unless $args->{parent};
+  confess "no path"   unless $args->{path};
 
   my $file_obj = __PACKAGE__->new({filename => $args->{filename},
+				   path     => $args->{path},
 				   size     => -s $args->{filename},
 				   parent   => $args->{parent},
 				  });
@@ -66,6 +69,11 @@ sub size {
 sub uuid {
   my $self = shift;
   return $self->{uuid};
+}
+
+sub path {
+  my $self = shift;
+  return $self->{path};
 }
 
 # helper

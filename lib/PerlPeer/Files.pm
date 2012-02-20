@@ -50,6 +50,7 @@ sub add_all_in_path {
 	   my $file = PerlPeer::File->new_from_local_file(
 							  { parent => $self,
 							    filename => $filename,
+							    path => $path,
 							  });
 	   push @{ $self->{files} }, $file;
 	   return;
