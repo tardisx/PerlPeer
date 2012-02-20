@@ -1,0 +1,29 @@
+=head1 DESCRIPTION
+
+PerlPeer is a meshed P2P client running between trusted peers on a LAN
+or WAN network.
+
+=head1 STATUS
+
+PerlPeer is not yet operational.
+
+=head1 SYNOPSIS
+
+  git clone git://github.com/tardisx/PerlPeer.git
+  cd PerlPeer
+  perl Makefile.PL
+  make
+  script/perl_peer <your-ip-address> 2222
+
+Then visit http://127.0.0.1:2222 in your browser.
+
+=head1 AUTHOR
+
+Justin Hawkins, E<lt>justin@hawkins.id.auE<gt>
+
+=head1 LICENSE
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
