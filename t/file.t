@@ -33,4 +33,4 @@ ok ($file_local, 'exists');
 ok ($file_local->size == 4096, 'right size');
 ok ($file_local->nice_size eq '4K');
 
-
+unlink $filename;
