@@ -1,0 +1,13 @@
+% layout 'default';
+% title 'Welcome to PerlPeer';
+
+<ul>
+% foreach my $node ($nodes->list) {
+<li><%= $node %>
+  <ul>
+%   foreach my $file ($node->files->list) {
+    <li><%= $file %></li>
+%   }
+  </ul>
+% }
+</ul>

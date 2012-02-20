@@ -12,6 +12,8 @@ use Mojo::Server::Daemon;
 use AnyEvent;
 use EV;
 
+use Getopt::Long;
+
 use PerlPeer::Files;
 use PerlPeer::Nodes;
 
@@ -27,15 +29,27 @@ EOF
 # Application
 $ENV{MOJO_APP} ||= 'PerlPeer';
 
-# Port?
-my $ip   = shift;
-my $port = shift;
+# Command line options
 
-die "pass an ip and a port" unless ($ip && $port);
+my $ip;
+my $port = 2222;
+my $filepath;
+
+my $result = GetOptions ("ip=s"    => \$ip,
+			 "port=i"  => \$port,
+			 "filepath=s" => \$filepath);
+
+die "need --ip" unless $ip;
+die "need --filepath" unless $filepath;
+die "$filepath is not a directory" unless -d $filepath;
 
 # Create the Files and Nodes handlers
 my $nodes = PerlPeer::Nodes->new($ip, $port);
-my $files = PerlPeer::Files->new({parent => $nodes->self});
+my $files = PerlPeer::Files->new();
+$nodes->self->set_files($files);
+
+# Add our local files
+$files->add_all_in_path($filepath);
 
 # Remind us who we are
 say "We are " . $nodes->self();

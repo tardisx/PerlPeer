@@ -35,6 +35,7 @@ sub new {
 	       port    => $args->{port},
 	       timeout => time() + $timeout,
 	       parent  => $args->{parent},
+	       files   => $args->{files},
 	     };
 
   bless $self, __PACKAGE__;
@@ -61,6 +62,21 @@ sub port {
 sub parent {
   my $self = shift;
   return $self->{parent};
+}
+
+sub files {
+  my $self = shift;
+  confess "set_files was never called" unless defined $self->{files};
+  return $self->{files};
+}
+
+# mutators
+
+sub set_files {
+  my $self = shift;
+  my $files = shift;
+  $self->{files} = $files;
+  return;
 }
 
 # checks

@@ -71,6 +71,11 @@ sub remove {
   return $self;
 }
 
+sub list {
+  my $self = shift;
+  return @{ $self->{nodes} };
+}
+
 sub nodes_as_hashref {
   my $self = shift;
   return [ map { { uuid => $_->uuid, ip => $_->ip, port => $_->port } } @{ $self->{nodes} } ];

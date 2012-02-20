@@ -15,7 +15,7 @@ sub startup {
   my $r = $self->routes;
 
   # Normal route to controller
-  $r->route('/')->to('example#welcome');
+  $r->route('/')->to('interface#root');
 
   $r->route('/REST/1.0/ping')->via(qw/POST/)->to('rest#ping');
 
