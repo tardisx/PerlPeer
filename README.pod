@@ -15,7 +15,7 @@ PerlPeer is not yet operational.
   make
   script/perl_peer <your-ip-address> 2222
 
-Then visit http://127.0.0.1:2222 in your browser.
+Then visit L<http://127.0.0.1:2222> in your browser.
 
 =head1 AUTHOR
 
