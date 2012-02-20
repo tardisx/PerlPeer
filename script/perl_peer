@@ -35,7 +35,7 @@ die "pass an ip and a port" unless ($ip && $port);
 
 # Create the Files and Nodes handlers
 my $nodes = PerlPeer::Nodes->new($ip, $port);
-my $files = PerlPeer::Files->new();
+my $files = PerlPeer::Files->new({parent => $nodes->self});
 
 # Remind us who we are
 say "We are " . $nodes->self();
