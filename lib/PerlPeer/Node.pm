@@ -12,14 +12,13 @@ use AnyEvent;
 
 use Carp qw/confess/;
 
-use overload
-  '""' => \&to_string;
+use overload '""' => \&to_string;
 
 use Data::UUID;
 
-my $uuid = Data::UUID->new();
-my $timeout = 10;
-my $json = Mojo::JSON->new();
+my $uuid    = Data::UUID->new();
+my $timeout = 15;
+my $json    = Mojo::JSON->new();
 
 sub new {
   my $class = shift;
@@ -28,6 +27,8 @@ sub new {
   my $args = shift || {};
 
   confess "no parent supplied" if (! $args->{parent});
+  confess "no port supplied"   if (! $args->{port});
+  confess "no ip supplied"     if (! $args->{ip});
 
   my $self = { uuid    => $args->{uuid},
 	       ip      => $args->{ip},
@@ -35,6 +36,7 @@ sub new {
 	       timeout => time() + $timeout,
 	       parent  => $args->{parent},
 	     };
+
   bless $self, __PACKAGE__;
   return $self;
 }
@@ -90,8 +92,13 @@ sub ping_if_necessary {
     $self->{ping_cv} = AE::cv;
 
     # set up what we do when there is a response
-    $self->{ping_cv}->cb(sub { my ($node, $tx) = (shift->recv); $node->ping_received($tx); });
+    $self->{ping_cv}->cb(
+			 sub { 
+			   my ($node, $tx) = (shift->recv); 
+			   $node->ping_received($tx); 
+			 });
 
+    # do the ping (POST)
     $self->{ping_ua}->post($url
 			   => {'Content-Type' => 'application/json'}
 			   => $nodedata => sub {
@@ -105,7 +112,6 @@ sub ping_received {
   my $self = shift;
   my $tx   = shift;
 
-  # XX check if it's good
   if ($tx && $tx->res && $tx->res->code && $tx->res->code == 200) {
     my $response;
     eval { $response = $tx->res->json; };
@@ -140,7 +146,6 @@ sub ping_received {
 }
 
 # helpers
-
 
 sub to_string {
   my $self = shift;
