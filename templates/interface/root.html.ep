@@ -1,6 +1,7 @@
 % layout 'default';
 % title 'Welcome to PerlPeer';
 
+
 <ul>
 % foreach my $node ($nodes->list) {
 <li><%= $node %>
@@ -11,3 +12,24 @@
   </ul>
 % }
 </ul>
+
+<h2>Files (auto-update)</h2>
+<div class="files"></div>
+
+<script src="/js/jquery.js"></script>
+<script>
+$(document).ready(function() {
+  setInterval("update_files()", 5000);
+});
+
+function update_files() {
+  $.getJSON("/REST/1.0/files", function(result) {
+    $(".files").empty();
+    // should check this is ok - result.result
+    $.each(result.files, function(i, a_file) {
+      $(".files").append(a_file.uuid + " " + a_file.filename + "<br />");
+    });
+  });
+}
+
+</script>
