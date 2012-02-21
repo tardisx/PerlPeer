@@ -49,7 +49,7 @@ my $files = PerlPeer::Files->new();
 $nodes->self->set_files($files);
 
 # Add our local files
-$files->add_all_in_path($filepath);
+$files->update_all_in_path($filepath);
 
 # Remind us who we are
 say "We are " . $nodes->self();
@@ -63,14 +63,14 @@ while (my $arg = shift) {
 # Initialise the app and daemon.
 my $app = PerlPeer->new();
 
-$app->config->{ files } = $files;
 $app->config->{ nodes } = $nodes;
 
 my $daemon = Mojo::Server::Daemon->new(app => $app, listen => ['http://*:'.$port]);
 $daemon->start;
 
 # Start EV stuff
-my $nodes_timer = AE::timer 1, 5, sub { $nodes->update() };
+my $nodes_timer = AE::timer  1,  5, sub { $nodes->update() };
+my $files_timer = AE::timer 10, 10, sub { $files->update_all_in_path($filepath) };
 
 my $cv = AE::cv;
 $cv->recv;

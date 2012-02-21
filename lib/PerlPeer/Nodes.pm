@@ -103,7 +103,13 @@ sub update {
 
   say "current nodes:";
   foreach my $node (@{ $self->{nodes} }) {
-    say " * $node";
+    if ($node->has_files_object) {
+      say " * $node (" . $node->files->count . " files)";
+    }
+    else {
+      say " * $node (no files yet)";
+    }
+
   }
 
 }

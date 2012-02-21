@@ -29,6 +29,7 @@ sub new {
 	       parent   => $args->{parent},
 	       size     => $args->{size},
 	       path     => $args->{path},
+	       mtime    => $args->{mtime},
 	     };
 
   bless $self, __PACKAGE__;
@@ -49,6 +50,7 @@ sub new_from_local_file {
 				   path     => $args->{path},
 				   size     => -s $args->{filename},
 				   parent   => $args->{parent},
+				   mtime    => (stat($args->{filename}))[9],
 				  });
   return $file_obj;
 }
@@ -76,6 +78,11 @@ sub path {
   return $self->{path};
 }
 
+sub mtime {
+  my $self = shift;
+  return $self->{mtime};
+}
+
 # helper
 
 sub nice_size {
@@ -90,7 +97,7 @@ sub nice_filename {
 
 sub to_string {
   my $self = shift;
-  return $self->uuid . " - " . $self->nice_filename . " (" . $self->nice_size . ")";
+  return $self->uuid . " - " . $self->nice_filename . " (" . $self->nice_size . " bytes)";
 }
 
 1;

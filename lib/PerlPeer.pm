@@ -17,7 +17,9 @@ sub startup {
   # Normal route to controller
   $r->route('/')->to('interface#root');
 
+  # RESTful routs
   $r->route('/REST/1.0/ping')->via(qw/POST/)->to('rest#ping');
+  $r->route('/REST/1.0/files')->to('rest#files');
 
 }
 

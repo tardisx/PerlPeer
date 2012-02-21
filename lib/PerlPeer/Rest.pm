@@ -4,7 +4,7 @@ use Mojo::JSON;
 
 my $json = Mojo::JSON->new();
 
-# This action will render a template
+# respond to a ping
 sub ping {
   my $self   = shift;
   my $config = $self->config;
@@ -17,6 +17,15 @@ sub ping {
   }
 
   $self->render( json => { result => 'ok', 'uuid' => $config->{nodes}->self->uuid } );
+}
+
+# list my files
+sub files {
+  my $self = shift;
+  my $config = $self->config;
+
+  my $files_hashref = $config->{nodes}->self->files->as_hashref;
+  $self->render( json => { result => 'ok', files => $files_hashref } );
 }
 
 1;

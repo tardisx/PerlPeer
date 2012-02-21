@@ -9,6 +9,7 @@ use Mojo::UserAgent;
 use Mojo::JSON;
 use Mojo::ByteStream qw/b/;
 use AnyEvent;
+use Scalar::Util qw/refaddr/;
 
 use Carp qw/confess/;
 
@@ -66,8 +67,15 @@ sub parent {
 
 sub files {
   my $self = shift;
-  confess "set_files was never called" unless defined $self->{files};
+  confess "set_files was never called for $self" 
+    unless defined $self->{files};
   return $self->{files};
+}
+
+sub has_files_object {
+  my $self = shift;
+  return 1 if $self->{files};
+  return 0;
 }
 
 # mutators
@@ -94,7 +102,6 @@ sub ping_if_necessary {
   my $all_nodes = shift;
 
   if ($self->{ping_cv}) {
-    warn "ping already in progress";
     return;
   }
 
@@ -109,9 +116,9 @@ sub ping_if_necessary {
 
     # set up what we do when there is a response
     $self->{ping_cv}->cb(
-			 sub { 
-			   my ($node, $tx) = (shift->recv); 
-			   $node->ping_received($tx); 
+			 sub {
+			   my ($node, $tx) = (shift->recv);
+			   $node->ping_received($tx);
 			 });
 
     # do the ping (POST)
@@ -137,6 +144,8 @@ sub ping_received {
 	# reset the timer and set the uuid
 	$self->{timeout} = time() + $timeout;
 	$self->{uuid}    = $response->{uuid};
+	# schedule to update the file list
+	$self->get_file_list();
       }
 
       else {
@@ -159,6 +168,72 @@ sub ping_received {
   undef $self->{ping_cv};
   undef $self->{ping_ua};
 
+}
+
+sub get_file_list {
+  my $self = shift;
+  my $all_nodes = shift;
+
+  # don't do it to ourself
+  if (refaddr($self) eq refaddr($self->parent->self)) {
+    return;
+  }
+
+  if ($self->{files_cv}) {
+    warn "get_file_list already in progress";
+    return;
+  }
+
+  my $url = "http://" . $self->ip . ":" . $self->port . "/REST/1.0/files";
+
+  $self->{files_ua} = Mojo::UserAgent->new;
+  $self->{files_cv} = AE::cv;
+
+  # set up what we do when there is a response
+  $self->{files_cv}->cb(
+			sub {
+			  my ($node, $tx) = (shift->recv);
+			  $node->file_list_received($tx);
+			});
+
+  # do the request
+  $self->{files_ua}->get($url => sub {
+			   my ($ua, $tx) = @_;
+			   $self->{files_cv}->send($self, $tx);
+			 });
+
+}
+
+sub file_list_received {
+  my $self = shift;
+  my $tx   = shift;
+
+  if ($tx && $tx->res && $tx->res->code && $tx->res->code == 200) {
+    my $response;
+    eval { $response = $tx->res->json; };
+    if (!$@ && $response->{result} eq 'ok') {
+      # good stuff
+      my $files_data = $response->{files}; # array of hashrefs
+      # create an empty files object if we don't have one yet.
+      if (! $self->has_files_object) {
+	$self->set_files(PerlPeer::Files->new());
+      }
+      # update it
+      $self->files->update_files_from_arrayref($files_data);
+    }
+    else {
+      warn "something bad happened: $@\n";
+    }
+  }
+  else {
+    say " * $self - bad get_files response";
+    say "   body . " . $tx->res->body;
+  }
+
+  # whatever happened, we are done with the request, so kill
+  # the event and ua.
+  undef $self->{files_cv};
+  undef $self->{files_ua};
 }
 
 # helpers
