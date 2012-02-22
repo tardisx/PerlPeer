@@ -18,7 +18,7 @@ use overload '""' => \&to_string;
 use Data::UUID;
 
 my $uuid    = Data::UUID->new();
-my $timeout = 15;
+my $timeout = 60;
 my $json    = Mojo::JSON->new();
 
 sub new {
@@ -34,7 +34,7 @@ sub new {
   my $self = { uuid    => $args->{uuid},
 	       ip      => $args->{ip},
 	       port    => $args->{port},
-	       timeout => time() + $timeout,
+	       timeout => time() + ($timeout / 2) - int(rand(20)),
 	       parent  => $args->{parent},
 	       files   => $args->{files},
 	     };
@@ -108,7 +108,7 @@ sub ping_if_necessary {
   # ping if less than half of our timeout is left
   if ($self->{timeout} - $timeout/2 < time()) {
 
-    my $url = "http://" . $self->ip . ":" . $self->port . "/REST/1.0/ping?";
+    my $url = "https://" . $self->ip . ":" . $self->port . "/REST/1.0/ping?";
     my $nodedata = $json->encode($all_nodes);
 
     $self->{ping_ua} = Mojo::UserAgent->new;
@@ -184,7 +184,7 @@ sub get_file_list {
     return;
   }
 
-  my $url = "http://" . $self->ip . ":" . $self->port . "/REST/1.0/files";
+  my $url = "https://" . $self->ip . ":" . $self->port . "/REST/1.0/files";
 
   $self->{files_ua} = Mojo::UserAgent->new;
   $self->{files_cv} = AE::cv;

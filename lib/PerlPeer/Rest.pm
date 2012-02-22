@@ -10,6 +10,7 @@ sub ping {
   my $config = $self->config;
   my $nodes  = $self->req->json;
 
+  # Add all the nodes that have been advertised to us by the pinger.
   foreach (@$nodes) {
     # add nodes that have a UUID
     $config->{nodes}->add_if_necessary($_)

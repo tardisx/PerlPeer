@@ -65,7 +65,7 @@ my $app = PerlPeer->new();
 
 $app->config->{ nodes } = $nodes;
 
-my $daemon = Mojo::Server::Daemon->new(app => $app, listen => ['http://*:'.$port]);
+my $daemon = Mojo::Server::Daemon->new(app => $app, listen => ['https://*:'.$port]);
 $daemon->start;
 
 # Start EV stuff
