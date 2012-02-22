@@ -56,7 +56,8 @@ sub add_if_necessary {
   my $ip   = $args->{ip};
 
   foreach (@{ $self->{nodes} }) {
-    return if ($_->uuid && $uuid && ($_->uuid eq $uuid));
+    return if ($_->uuid && $uuid && ($_->uuid eq $uuid)); # we know this one
+    return if (($_->ip eq $ip) && ($_->port eq $port)); # this looks like us, do not add
   }
   my $node = PerlPeer::Node->new({ uuid => $uuid, port => $port, ip => $ip, parent => $self });
   push @{ $self->{nodes} }, $node;
