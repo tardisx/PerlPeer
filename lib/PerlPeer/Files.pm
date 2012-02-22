@@ -54,6 +54,7 @@ sub as_hashref {
     { uuid => $_->uuid,
 	filename => $_->filename,
 	  size => $_->size,
+	    nice_size => $_->nice_size,
 	}  } $self->list ];
 }
 

@@ -17,9 +17,15 @@ sub startup {
   # Normal route to controller
   $r->route('/')->to('interface#root');
 
-  # RESTful routs
+  # RESTful routes
+  # routes for the remote nodes to hit
   $r->route('/REST/1.0/ping')->via(qw/POST/)->to('rest#ping');
   $r->route('/REST/1.0/files')->to('rest#files');
+  $r->route('/REST/1.0/file/:uuid')->to('rest#file_get_by_uuid');
+
+  # routes for the local interface to use
+  # XXX should check it is the local user!
+  $r->route('/REST/1.0/files/all')->to('rest#files_all');
 
 }
 

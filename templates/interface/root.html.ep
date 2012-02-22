@@ -1,20 +1,8 @@
 % layout 'default';
 % title 'Welcome to PerlPeer';
 
-
-<ul>
-% foreach my $node ($nodes->list) {
-<li><%= $node %>
-  <ul>
-%   foreach my $file ($node->files->list) {
-    <li><%= $file %></li>
-%   }
-  </ul>
-% }
-</ul>
-
-<h2>Files (auto-update)</h2>
-<div class="files"></div>
+<h2>Perl Peer mesh file list</h2>
+<table class="files"></table>
 
 <script src="/js/jquery.js"></script>
 <script>
@@ -23,11 +11,12 @@ $(document).ready(function() {
 });
 
 function update_files() {
-  $.getJSON("/REST/1.0/files", function(result) {
+  $.getJSON("/REST/1.0/files/all", function(result) {
     $(".files").empty();
     // should check this is ok - result.result
     $.each(result.files, function(i, a_file) {
-      $(".files").append(a_file.uuid + " " + a_file.filename + "<br />");
+      $(".files").append("<tr><td>" + a_file.filename + "</td>" +
+       "<td>" + a_file.nice_size + "</td></tr>");
     });
   });
 }

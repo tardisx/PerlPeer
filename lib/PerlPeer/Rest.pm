@@ -29,4 +29,29 @@ sub files {
   $self->render( json => { result => 'ok', files => $files_hashref } );
 }
 
+# all files we know about
+sub files_all {
+  my $self = shift;
+  my $config = $self->config;
+  my $stats  = {};
+
+  my @all_files = ();
+  foreach my $node ($config->{nodes}->list) {
+    $stats->{total_nodes}++;
+    push @all_files, @{ $node->files->as_hashref };
+  }
+
+  $stats->{total_files} = scalar @all_files;
+  $stats->{total_bytes} += $_->{size} foreach @all_files;
+
+  # sort for presentation
+  @all_files = sort { $a->{filename} cmp $b->{filename} } @all_files;
+
+  $self->render( json => { result => 'ok', 
+			   files => \@all_files,
+			   stats => $stats });
+
+
+}
+
 1;
