@@ -1,6 +1,11 @@
 package PerlPeer::Rest;
+
+use strict;
+use warnings;
+
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::JSON;
+
 use Number::Format qw/format_bytes/;
 
 my $json = Mojo::JSON->new();

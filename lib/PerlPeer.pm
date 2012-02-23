@@ -1,5 +1,8 @@
 package PerlPeer;
 
+use strict;
+use warnings;
+
 use Mojo::Base 'Mojolicious';
 
 use Mojo::Server::Daemon;

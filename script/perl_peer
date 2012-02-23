@@ -1,4 +1,8 @@
 #!/usr/bin/env perl
+
+use strict;
+use warnings;
+
 use Mojo::Base -strict;
 
 use File::Basename 'dirname';
@@ -20,7 +24,7 @@ use PerlPeer::Nodes;
 push @INC, join('/', splitdir(dirname(__FILE__)), '..', 'lib');
 
 # Check if Mojolicious is installed;
-die <<EOF unless eval 'use Mojolicious::Commands; 1';
+die <<EOF unless eval 'use Mojolicious::Commands; 1';  ## no critic
 It looks like you don't have the Mojolicious framework installed.
 Please visit http://mojolicio.us for detailed installation instructions.
 
