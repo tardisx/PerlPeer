@@ -46,7 +46,7 @@ sub files_all {
   $stats->{total_bytes} += $_->{size} foreach @all_files;
 
   $stats->{$_} = format_bytes($stats->{$_}) foreach (qw/total_files total_bytes/);
-  
+
   # sort for presentation
   # newest at the top
   @all_files = sort { $b->{mtime} <=> $a->{mtime} } @all_files;

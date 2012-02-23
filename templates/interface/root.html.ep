@@ -10,6 +10,7 @@
 <script src="/js/jquery.js"></script>
 <script>
 $(document).ready(function() {
+  update_files();
   setInterval("update_files()", 5000);
 });
 
