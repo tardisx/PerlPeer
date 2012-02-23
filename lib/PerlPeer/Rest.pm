@@ -1,6 +1,7 @@
 package PerlPeer::Rest;
 use Mojo::Base 'Mojolicious::Controller';
 use Mojo::JSON;
+use Number::Format qw/format_bytes/;
 
 my $json = Mojo::JSON->new();
 
@@ -44,10 +45,13 @@ sub files_all {
   $stats->{total_files} = scalar @all_files;
   $stats->{total_bytes} += $_->{size} foreach @all_files;
 
+  $stats->{$_} = format_bytes($stats->{$_}) foreach (qw/total_files total_bytes/);
+  
   # sort for presentation
-  @all_files = sort { $a->{filename} cmp $b->{filename} } @all_files;
+  # newest at the top
+  @all_files = sort { $b->{mtime} <=> $a->{mtime} } @all_files;
 
-  $self->render( json => { result => 'ok', 
+  $self->render( json => { result => 'ok',
 			   files => \@all_files,
 			   stats => $stats });
 

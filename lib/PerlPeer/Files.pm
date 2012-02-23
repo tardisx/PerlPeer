@@ -10,6 +10,7 @@ use warnings;
 use Data::UUID;
 use File::Find qw/find/;
 use Scalar::Util qw/refaddr/;
+use Time::Duration qw/duration concise/;
 
 use PerlPeer::File;
 
@@ -50,12 +51,14 @@ sub count {
 
 sub as_hashref {
   my $self = shift;
-  return [ map { 
-    { uuid => $_->uuid,
-	filename => $_->filename,
-	  size => $_->size,
-	    nice_size => $_->nice_size,
-	}  } $self->list ];
+  return [ map {
+      {      uuid => $_->uuid,
+         filename => $_->filename,
+             size => $_->size,
+            mtime => $_->mtime,
+        nice_size => $_->nice_size,
+              age => concise(duration(time() - $_->mtime))
+      } } $self->list ];
 }
 
 # search our list of files for a file with a particular name
@@ -117,6 +120,7 @@ sub update_files_from_arrayref {
     push @new_files, PerlPeer::File->new( { filename => $_->{filename},
 					    size     => $_->{size},
 					    uuid     => $_->{uuid},
+                                            mtime    => $_->{mtime},
 					    parent   => $self,
 					  } );
   }
