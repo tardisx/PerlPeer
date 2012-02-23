@@ -20,38 +20,41 @@ sub new {
 
   my $args = shift || {};
 
-  confess "no parent supplied" if (! $args->{parent});
-  confess "no filename"        if (! $args->{filename});
-  confess "no size"            if (! $args->{size});
+  confess "no parent supplied" if ( !$args->{parent} );
+  confess "no filename"        if ( !$args->{filename} );
+  confess "no size"            if ( !$args->{size} );
 
-  my $self = { uuid     => $args->{uuid} || $uuid->create_str,
-	       filename => $args->{filename},
-	       parent   => $args->{parent},
-	       size     => $args->{size},
-	       path     => $args->{path},
-	       mtime    => $args->{mtime},
-	     };
+  my $self = {
+    uuid => $args->{uuid} || $uuid->create_str,
+    filename => $args->{filename},
+    parent   => $args->{parent},
+    size     => $args->{size},
+    path     => $args->{path},
+    mtime    => $args->{mtime},
+  };
 
   bless $self, __PACKAGE__;
   return $self;
 }
 
 sub new_from_local_file {
-  my $class    = shift;
-  my $args     = shift;
+  my $class = shift;
+  my $args  = shift;
 
   confess "called as object method" if ref $class;
-  confess "no filename" unless $args->{filename};
+  confess "no filename"                        unless $args->{filename};
   confess "'$args->{filename}' does not exist" unless -f $args->{filename};
-  confess "no parent" unless $args->{parent};
-  confess "no path"   unless $args->{path};
+  confess "no parent"                          unless $args->{parent};
+  confess "no path"                            unless $args->{path};
 
-  my $file_obj = __PACKAGE__->new({filename => $args->{filename},
-				   path     => $args->{path},
-				   size     => -s $args->{filename},
-				   parent   => $args->{parent},
-				   mtime    => (stat($args->{filename}))[9],
-				  });
+  my $file_obj = __PACKAGE__->new(
+    { filename => $args->{filename},
+      path     => $args->{path},
+      size     => -s $args->{filename},
+      parent   => $args->{parent},
+      mtime    => ( stat( $args->{filename} ) )[9],
+    }
+  );
   return $file_obj;
 }
 
@@ -87,7 +90,7 @@ sub mtime {
 
 sub nice_size {
   my $self = shift;
-  return format_bytes($self->size);
+  return format_bytes( $self->size );
 }
 
 sub nice_filename {
@@ -97,7 +100,11 @@ sub nice_filename {
 
 sub to_string {
   my $self = shift;
-  return $self->uuid . " - " . $self->nice_filename . " (" . $self->nice_size . " bytes)";
+  return
+      $self->uuid . " - "
+    . $self->nice_filename . " ("
+    . $self->nice_size
+    . " bytes)";
 }
 
 1;

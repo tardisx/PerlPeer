@@ -27,17 +27,18 @@ sub new {
 
   my $args = shift || {};
 
-  confess "no parent supplied" if (! $args->{parent});
-  confess "no port supplied"   if (! $args->{port});
-  confess "no ip supplied"     if (! $args->{ip});
+  confess "no parent supplied" if ( !$args->{parent} );
+  confess "no port supplied"   if ( !$args->{port} );
+  confess "no ip supplied"     if ( !$args->{ip} );
 
-  my $self = { uuid    => $args->{uuid},
-	       ip      => $args->{ip},
-	       port    => $args->{port},
-	       timeout => time() + ($timeout / 2) - int(rand(20)),
-	       parent  => $args->{parent},
-	       files   => $args->{files},
-	     };
+  my $self = {
+    uuid    => $args->{uuid},
+    ip      => $args->{ip},
+    port    => $args->{port},
+    timeout => time() + ( $timeout / 2 ) - int( rand(20) ),
+    parent  => $args->{parent},
+    files   => $args->{files},
+  };
 
   bless $self, __PACKAGE__;
   return $self;
@@ -67,7 +68,7 @@ sub parent {
 
 sub files {
   my $self = shift;
-  confess "set_files was never called for $self" 
+  confess "set_files was never called for $self"
     unless defined $self->{files};
   return $self->{files};
 }
@@ -81,7 +82,7 @@ sub has_files_object {
 # mutators
 
 sub set_files {
-  my $self = shift;
+  my $self  = shift;
   my $files = shift;
   $self->{files} = $files;
   return;
@@ -91,22 +92,22 @@ sub set_files {
 
 sub has_timed_out {
   my $self = shift;
-  return 1 if ($self->{timeout} < time());
+  return 1 if ( $self->{timeout} < time() );
   return 0;
 }
 
 # action methods
 
 sub ping_if_necessary {
-  my $self = shift;
+  my $self      = shift;
   my $all_nodes = shift;
 
-  if ($self->{ping_cv}) {
+  if ( $self->{ping_cv} ) {
     return;
   }
 
   # ping if less than half of our timeout is left
-  if ($self->{timeout} - $timeout/2 < time()) {
+  if ( $self->{timeout} - $timeout / 2 < time() ) {
 
     my $url = "https://" . $self->ip . ":" . $self->port . "/REST/1.0/ping?";
     my $nodedata = $json->encode($all_nodes);
@@ -116,18 +117,19 @@ sub ping_if_necessary {
 
     # set up what we do when there is a response
     $self->{ping_cv}->cb(
-			 sub {
-			   my ($node, $tx) = (shift->recv);
-			   $node->ping_received($tx);
-			 });
+      sub {
+        my ( $node, $tx ) = ( shift->recv );
+        $node->ping_received($tx);
+      }
+    );
 
     # do the ping (POST)
-    $self->{ping_ua}->post($url
-			   => {'Content-Type' => 'application/json'}
-			   => $nodedata => sub {
-			     my ($ua, $tx) = @_;
-			     $self->{ping_cv}->send($self, $tx);
-			   });
+    $self->{ping_ua}->post(
+      $url => { 'Content-Type' => 'application/json' } => $nodedata => sub {
+        my ( $ua, $tx ) = @_;
+        $self->{ping_cv}->send( $self, $tx );
+      }
+    );
   }
 }
 
@@ -135,23 +137,26 @@ sub ping_received {
   my $self = shift;
   my $tx   = shift;
 
-  if ($tx && $tx->res && $tx->res->code && $tx->res->code == 200) {
+  if ( $tx && $tx->res && $tx->res->code && $tx->res->code == 200 ) {
     my $response;
     eval { $response = $tx->res->json; };
-    if (!$@ && $response->{result} eq 'ok') {
+    if ( !$@ && $response->{result} eq 'ok' ) {
+
       # UUID better match too, if we know the uuid yet (we may not)
-      if (! $self->uuid || ($response->{uuid} eq $self->uuid)) {
-	# reset the timer and set the uuid
-	$self->{timeout} = time() + $timeout;
-	$self->{uuid}    = $response->{uuid};
-	# schedule to update the file list
-	$self->get_file_list();
+      if ( !$self->uuid || ( $response->{uuid} eq $self->uuid ) ) {
+
+        # reset the timer and set the uuid
+        $self->{timeout} = time() + $timeout;
+        $self->{uuid}    = $response->{uuid};
+
+        # schedule to update the file list
+        $self->get_file_list();
       }
 
       else {
-	warn "uuid does not match!\n";
-	warn "expected " . $self->uuid . "\n";
-	warn "got      " . $response->{uuid} . "\n";
+        warn "uuid does not match!\n";
+        warn "expected " . $self->uuid . "\n";
+        warn "got      " . $response->{uuid} . "\n";
       }
     }
     else {
@@ -171,15 +176,15 @@ sub ping_received {
 }
 
 sub get_file_list {
-  my $self = shift;
+  my $self      = shift;
   my $all_nodes = shift;
 
   # don't do it to ourself
-  if (refaddr($self) eq refaddr($self->parent->self)) {
+  if ( refaddr($self) eq refaddr( $self->parent->self ) ) {
     return;
   }
 
-  if ($self->{files_cv}) {
+  if ( $self->{files_cv} ) {
     warn "get_file_list already in progress";
     return;
   }
@@ -191,16 +196,19 @@ sub get_file_list {
 
   # set up what we do when there is a response
   $self->{files_cv}->cb(
-			sub {
-			  my ($node, $tx) = (shift->recv);
-			  $node->file_list_received($tx);
-			});
+    sub {
+      my ( $node, $tx ) = ( shift->recv );
+      $node->file_list_received($tx);
+    }
+  );
 
   # do the request
-  $self->{files_ua}->get($url => sub {
-			   my ($ua, $tx) = @_;
-			   $self->{files_cv}->send($self, $tx);
-			 });
+  $self->{files_ua}->get(
+    $url => sub {
+      my ( $ua, $tx ) = @_;
+      $self->{files_cv}->send( $self, $tx );
+    }
+  );
 
 }
 
@@ -208,16 +216,18 @@ sub file_list_received {
   my $self = shift;
   my $tx   = shift;
 
-  if ($tx && $tx->res && $tx->res->code && $tx->res->code == 200) {
+  if ( $tx && $tx->res && $tx->res->code && $tx->res->code == 200 ) {
     my $response;
     eval { $response = $tx->res->json; };
-    if (!$@ && $response->{result} eq 'ok') {
+    if ( !$@ && $response->{result} eq 'ok' ) {
+
       # good stuff
-      my $files_data = $response->{files}; # array of hashrefs
-      # create an empty files object if we don't have one yet.
-      if (! $self->has_files_object) {
-	$self->set_files(PerlPeer::Files->new());
+      my $files_data = $response->{files};    # array of hashrefs
+           # create an empty files object if we don't have one yet.
+      if ( !$self->has_files_object ) {
+        $self->set_files( PerlPeer::Files->new() );
       }
+
       # update it
       $self->files->update_files_from_arrayref($files_data);
     }
@@ -240,12 +250,13 @@ sub file_list_received {
 
 sub to_string {
   my $self = shift;
-  return sprintf("%s | %s | %s (%s secs)",
-		 $self->{uuid}  ? $self->{uuid} : "[undef]",
-		 $self->{ip}    ? $self->{ip} : "[undef]",
-		 $self->{port}  ? $self->{port} : "[undef]",
-		 $self->{timeout} - time(),
-		);
+  return sprintf(
+    "%s | %s | %s (%s secs)",
+    $self->{uuid} ? $self->{uuid} : "[undef]",
+    $self->{ip}   ? $self->{ip}   : "[undef]",
+    $self->{port} ? $self->{port} : "[undef]",
+    $self->{timeout} - time(),
+  );
 }
 
 1;

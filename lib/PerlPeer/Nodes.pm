@@ -16,7 +16,7 @@ my $our_uuid = Data::UUID->new->create_str;
 
 sub new {
 
-  my $class = shift;
+  my $class     = shift;
   my $self_ip   = shift;
   my $self_port = shift;
 
@@ -26,12 +26,16 @@ sub new {
   bless $self, __PACKAGE__;
 
   # in the beginning we know only about ourself
-  say "Creating a new set of nodes with first node ip: $self_ip, port $self_port";
-  my $us = PerlPeer::Node->new( { ip     => $self_ip,
-				  uuid   => $our_uuid,
-				  port   => $self_port,
-				  parent => $self } );
-  $self->{nodes} = [ $us ];
+  say
+    "Creating a new set of nodes with first node ip: $self_ip, port $self_port";
+  my $us = PerlPeer::Node->new(
+    { ip     => $self_ip,
+      uuid   => $our_uuid,
+      port   => $self_port,
+      parent => $self
+    }
+  );
+  $self->{nodes} = [$us];
 
   return $self;
 }
@@ -55,11 +59,15 @@ sub add_if_necessary {
   my $port = $args->{port};
   my $ip   = $args->{ip};
 
-  foreach (@{ $self->{nodes} }) {
-    return if ($_->uuid && $uuid && ($_->uuid eq $uuid)); # we know this one
-    return if (($_->ip eq $ip) && ($_->port eq $port)); # this looks like us, do not add
+  foreach ( @{ $self->{nodes} } ) {
+    return
+      if ( $_->uuid && $uuid && ( $_->uuid eq $uuid ) );    # we know this one
+    return
+      if ( ( $_->ip eq $ip ) && ( $_->port eq $port ) )
+      ;    # this looks like us, do not add
   }
-  my $node = PerlPeer::Node->new({ uuid => $uuid, port => $port, ip => $ip, parent => $self });
+  my $node = PerlPeer::Node->new(
+    { uuid => $uuid, port => $port, ip => $ip, parent => $self } );
   push @{ $self->{nodes} }, $node;
   say "$node added";
   return 1;
@@ -68,7 +76,12 @@ sub add_if_necessary {
 sub remove {
   my $self = shift;
   my $node = shift;
-  $self->{nodes} = [ map { if (refaddr($_) ne refaddr($node) ) { $_ } else { () } } @{ $self->{nodes} } ];
+  $self->{nodes} = [
+    map {
+      if   ( refaddr($_) ne refaddr($node) ) {$_}
+      else                                   { () }
+      } @{ $self->{nodes} }
+  ];
   return $self;
 }
 
@@ -79,32 +92,34 @@ sub list {
 
 sub nodes_as_hashref {
   my $self = shift;
-  return [ map { { uuid => $_->uuid, ip => $_->ip, port => $_->port } } @{ $self->{nodes} } ];
+  return [ map { { uuid => $_->uuid, ip => $_->ip, port => $_->port } }
+      @{ $self->{nodes} } ];
 }
 
 sub update {
   my $self = shift;
   use Data::Dumper;
 
-  foreach my $node (@{ $self->{nodes} }) {
+  foreach my $node ( @{ $self->{nodes} } ) {
 
     # if node has timed out, remove it
-    if ($node->has_timed_out) {
+    if ( $node->has_timed_out ) {
       print "$node - removing after timeout\n";
       $self->remove($node);
     }
 
     # ping it if we need to, to keep it alive
     else {
+
       # tell the node what the 'us' node is, so it can pass that
       # information on
-      $node->ping_if_necessary($self->nodes_as_hashref);
+      $node->ping_if_necessary( $self->nodes_as_hashref );
     }
   }
 
   say "current nodes:";
-  foreach my $node (@{ $self->{nodes} }) {
-    if ($node->has_files_object) {
+  foreach my $node ( @{ $self->{nodes} } ) {
+    if ( $node->has_files_object ) {
       say " * $node (" . $node->files->count . " files)";
     }
     else {

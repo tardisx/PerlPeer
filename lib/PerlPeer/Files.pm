@@ -27,7 +27,7 @@ sub new {
   bless $self, __PACKAGE__;
 
   # initialise
-  $self->{files}  = [];
+  $self->{files} = [];
 
   return $self;
 }
@@ -35,7 +35,12 @@ sub new {
 sub remove {
   my $self = shift;
   my $file = shift;
-  $self->{files} = [ map { if (refaddr($_) ne refaddr($file) ) { $_ } else { () } } @{ $self->{files} } ];
+  $self->{files} = [
+    map {
+      if   ( refaddr($_) ne refaddr($file) ) {$_}
+      else                                   { () }
+      } @{ $self->{files} }
+  ];
   return $self;
 }
 
@@ -51,23 +56,26 @@ sub count {
 
 sub as_hashref {
   my $self = shift;
-  return [ map {
-      {      uuid => $_->uuid,
-         filename => $_->filename,
-             size => $_->size,
-            mtime => $_->mtime,
+  return [
+    map {
+      { uuid      => $_->uuid,
+        filename  => $_->filename,
+        size      => $_->size,
+        mtime     => $_->mtime,
         nice_size => $_->nice_size,
-              age => concise(duration(time() - $_->mtime))
-      } } $self->list ];
+        age       => concise( duration( time() - $_->mtime ) )
+      }
+      } $self->list
+  ];
 }
 
 # search our list of files for a file with a particular name
 sub existing_file_with_filename {
-  my $self = shift;
+  my $self     = shift;
   my $filename = shift;
 
-  foreach (@{ $self->{files} }) {
-    return $_ if ($_->filename eq $filename);
+  foreach ( @{ $self->{files} } ) {
+    return $_ if ( $_->filename eq $filename );
   }
   return;
 }
@@ -78,38 +86,44 @@ sub update_all_in_path {
 
   # first nuke any files that have disappeared or can no
   # longer be read
-  foreach (@{ $self->{files} }) {
-    $self->remove($_) if (! -r $_->filename);
+  foreach ( @{ $self->{files} } ) {
+    $self->remove($_) if ( !-r $_->filename );
   }
 
   # omg I hate File::Find
-  find({ no_chdir => 1,
-	 wanted   => sub {
-	   my $filename = $_;
-	   return unless -f $filename;  # exists
-	   return unless -r $filename;  # readable
-	   return if     -z $filename;  # not zero length
+  find(
+    { no_chdir => 1,
+      wanted   => sub {
+        my $filename = $_;
+        return unless -f $filename;    # exists
+        return unless -r $filename;    # readable
+        return if -z $filename;        # not zero length
 
-	   my $file = $self->existing_file_with_filename($filename);
-	   if ($file && ($file->mtime == (stat($filename))[9])) {
-	     # do nothing, it's already on our list
-	     return;
-	   }
-	   if ($file && ($file->mtime != (stat($filename))[9])) {
-	     # it's changed, so delete it, and then fall through
-	     # to create a new object
-	     $self->remove($file);
-	   }
+        my $file = $self->existing_file_with_filename($filename);
+        if ( $file && ( $file->mtime == ( stat($filename) )[9] ) ) {
 
-	   $file = PerlPeer::File->new_from_local_file(
-						       { parent => $self,
-							 filename => $filename,
-							 path => $path,
-						       });
-	   push @{ $self->{files} }, $file;
-	   return;
-	 },
-       }, $path);
+          # do nothing, it's already on our list
+          return;
+        }
+        if ( $file && ( $file->mtime != ( stat($filename) )[9] ) ) {
+
+          # it's changed, so delete it, and then fall through
+          # to create a new object
+          $self->remove($file);
+        }
+
+        $file = PerlPeer::File->new_from_local_file(
+          { parent   => $self,
+            filename => $filename,
+            path     => $path,
+          }
+        );
+        push @{ $self->{files} }, $file;
+        return;
+      },
+    },
+    $path
+  );
   return;
 }
 
@@ -119,16 +133,19 @@ sub update_files_from_arrayref {
 
   my @new_files;
   foreach (@$ref) {
-    push @new_files, PerlPeer::File->new( { filename => $_->{filename},
-					    size     => $_->{size},
-					    uuid     => $_->{uuid},
-                                            mtime    => $_->{mtime},
-					    parent   => $self,
-					  } );
+    push @new_files,
+      PerlPeer::File->new(
+      { filename => $_->{filename},
+        size     => $_->{size},
+        uuid     => $_->{uuid},
+        mtime    => $_->{mtime},
+        parent   => $self,
+      }
+      );
   }
-  # replace the old with the new
-  $self->{files} = [ @new_files ];
-}
 
+  # replace the old with the new
+  $self->{files} = [@new_files];
+}
 
 1;

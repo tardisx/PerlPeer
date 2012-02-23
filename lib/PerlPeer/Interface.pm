@@ -5,10 +5,9 @@ use warnings;
 
 use Mojo::Base 'Mojolicious::Controller';
 
-
 # This action will render a template
 sub root {
-  my $self = shift;
+  my $self   = shift;
   my $config = $self->config();
 
   $self->stash->{nodes} = $config->{nodes};
