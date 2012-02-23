@@ -76,21 +76,23 @@ sub update_all_in_path {
   my $self = shift;
   my $path = shift;
 
-  # first nuke any files that have disappeared
+  # first nuke any files that have disappeared or can no
+  # longer be read
   foreach (@{ $self->{files} }) {
-    $self->remove($_) if (! -f $_->filename);
+    $self->remove($_) if (! -r $_->filename);
   }
 
   # omg I hate File::Find
   find({ no_chdir => 1,
 	 wanted   => sub {
 	   my $filename = $_;
-	   return unless -f $filename;
-	   return if     -z $filename;
+	   return unless -f $filename;  # exists
+	   return unless -r $filename;  # readable
+	   return if     -z $filename;  # not zero length
 
 	   my $file = $self->existing_file_with_filename($filename);
 	   if ($file && ($file->mtime == (stat($filename))[9])) {
-	     # do nothing, it's on the list
+	     # do nothing, it's already on our list
 	     return;
 	   }
 	   if ($file && ($file->mtime != (stat($filename))[9])) {
